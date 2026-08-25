@@ -19,7 +19,7 @@ For 24/7 operation, copy `systemd-sulav-vps.service.example` to a systemd servic
 ## Vercel
 
 1. Import this folder into Vercel.
-2. Set `APP_ENV=production`, `SECRET_KEY`, `ADMIN_PASSWORD`, and a non-obvious `ADMIN_PATH`.
+2. Set `APP_ENV=production`, a persistent `SECRET_KEY`, `ADMIN_PASSWORD`, and a non-obvious `ADMIN_PATH`. If `SECRET_KEY` is temporarily missing, the app still loads so `/healthz` and the configuration error page work, but sessions are not persistent until it is set.
 3. Set both Cloudflare Turnstile values to enable CAPTCHA on user and admin login.
 4. Keep `ENABLE_SERVER_CONSOLE=false` on Vercel.
 
