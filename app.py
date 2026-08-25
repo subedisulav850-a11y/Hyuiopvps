@@ -49,7 +49,7 @@ if not SECRET_KEY and APP_ENV == "production":
 if not SECRET_KEY:
     SECRET_KEY = secrets.token_urlsafe(48)
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "password")
 CF_SITE_KEY = os.environ.get("CF_TURNSTILE_SITE_KEY", "").strip()
 CF_SECRET_KEY = os.environ.get("CF_TURNSTILE_SECRET_KEY", "").strip()
 ADMIN_PATH = re.sub(r"[^A-Za-z0-9_-]", "", os.environ.get("ADMIN_PATH", "admin"))[:64] or "admin"
