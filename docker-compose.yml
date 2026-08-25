@@ -1,0 +1,17 @@
+services:
+  sulav-vps:
+    build: .
+    container_name: sulav-vps
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: "5000"
+      RUNTIME_DIR: /data
+    ports:
+      - "5000:5000"
+    volumes:
+      - sulav-vps-data:/data
+
+volumes:
+  sulav-vps-data:

@@ -28,20 +28,31 @@ docker run -d --name sulav-vps --restart unless-stopped \
   sulav-vps
 ```
 
-For 24/7 operation, copy `systemd-sulav-vps.service.example` to a systemd service, adjust the user/path, enable it, and put HTTPS in front with a reverse proxy. Vercel can serve the dashboard and API routes, but Vercel Functions are serverless/ephemeral: they cannot keep child processes alive, bind arbitrary ports, persist local files, or guarantee a 24/7 hosted user service. On Vercel, project start and the dynamic port gateway return a clear 409 response instead of pretending the service is running.
+For 24/7 operation, copy `systemd-sulav-vps.service.example` to a systemd
+service, adjust the user/path, enable it, and put HTTPS in front with a reverse
+proxy. This is a persistent-host deployment; hosted child services require a
+long-running process and writable storage.
 
-## Vercel
+## Production configuration
 
-1. Import this folder into Vercel.
-2. Set `APP_ENV=production`, a persistent `SECRET_KEY`, `ADMIN_PASSWORD`, and a non-obvious `ADMIN_PATH`. If `SECRET_KEY` is temporarily missing, the app still loads so `/healthz` and the configuration error page work, but sessions are not persistent until it is set.
-3. Set both Cloudflare Turnstile values to enable CAPTCHA on user and admin login.
-4. Keep `ENABLE_SERVER_CONSOLE=false` on Vercel.
+Set `APP_ENV=production`, a persistent `SECRET_KEY`, `ADMIN_PASSWORD`, and a
+non-obvious `ADMIN_PATH`. Set both Cloudflare Turnstile values to enable CAPTCHA
+on user and admin login. The health check is `/healthz`.
 
-The app exports a FastAPI `app` and mounts the existing Flask dashboard through ASGI, so Vercel's Python runtime and Uvicorn use the same entrypoint. The health check is `/healthz`.
+The Docker image stores application data under `/data`. For Compose:
+
+```sh
+cp .env.example .env
+# Edit .env with production values
+docker compose up --build -d
+```
 
 ## Hosting URLs
 
-On a VPS, each running project can be reached through the panel's local gateway as `https://your-domain.example/<port>/...`, for example `https://your-domain.example/5001/`. The gateway only proxies a registered running project port. Vercel does not support this arbitrary child-port model.
+On a host, each running project can be reached through the panel's local
+gateway as `https://your-domain.example/<port>/...`, for example
+`https://your-domain.example/5001/`. The gateway proxies a registered running
+project port.
 
 ## Dependency behavior
 
