@@ -40,4 +40,6 @@ The panel creates `servers/<name>/venv` for every project and runs `python -m pi
 - Uploads sanitize filenames, reject ZIP traversal/symlinks, and enforce file/count/uncompressed-size limits.
 - State-changing requests require CSRF tokens; login attempts are rate limited.
 - Secure session cookies and security headers are enabled; CAPTCHA fails closed when configured.
+- Admin Security Center records client IP activity, detects Vercel/Cloudflare proxy IPs safely, and supports temporary or permanent IP bans with unban controls.
+- Set `TRUST_PROXY_HEADERS=true` only when the immediate proxy is trusted; never trust forwarded IP headers on a directly exposed VPS.
 - The web console is disabled on Vercel by default and uses `shell=False` plus a small command allowlist when explicitly enabled on a trusted VPS.
