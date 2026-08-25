@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Files — {{ username }} | {{ site_name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--gold:#f59e0b;--gold-dim:rgba(245,158,11,.08);--gold-border:rgba(245,158,11,.2)}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#060606;color:#c9d1d9;font-family:'JetBrains Mono',monospace;min-height:100vh}
+    header{background:#080808;border-bottom:1px solid var(--gold-border);padding:0 20px;height:52px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+    .back{background:transparent;border:1px solid #111;color:#334155;width:30px;height:30px;border-radius:2px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;transition:all .2s}
+    .back:hover{background:#0d0d0d;color:#64748b;border-color:#1e293b}
+    .title{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:1px}
+    .subtitle{font-size:10px;color:#334155;margin-left:6px}
+    .btn{padding:5px 14px;border-radius:2px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;background:transparent;transition:all .2s;text-decoration:none;display:inline-block}
+    .btn-gold{border-color:var(--gold-border);color:var(--gold)}
+    .btn-gold:hover{background:var(--gold-dim)}
+    main{padding:20px;max-width:820px;margin:0 auto}
+    .section-hdr{font-size:10px;color:#334155;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+    .section-hdr::after{content:'';flex:1;height:1px;background:#111}
+    .project-block{background:#080808;border:1px solid #111;border-radius:2px;overflow:hidden;margin-bottom:14px}
+    .proj-hdr{padding:10px 16px;background:#0a0a0a;border-bottom:1px solid #111;display:flex;align-items:center;justify-content:space-between}
+    .proj-name{font-size:13px;font-weight:700;color:var(--gold)}
+    .proj-meta{font-size:10px;color:#334155}
+    .proj-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .file-row{display:flex;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid #0a0a0a;font-size:12px;transition:background .1s}
+    .file-row:last-child{border-bottom:none}
+    .file-row:hover{background:#090909}
+    .file-icon{font-size:13px;width:20px;text-align:center;flex-shrink:0}
+    .file-name{flex:1;color:#475569}
+    .file-size{color:#1e293b;font-size:10px;margin-right:8px}
+    .dl-btn{padding:3px 9px;border-radius:2px;font-family:inherit;font-size:10px;cursor:pointer;border:1px solid var(--gold-border);color:var(--gold);background:transparent;transition:all .15s;text-decoration:none;white-space:nowrap}
+    .dl-btn:hover{background:var(--gold-dim)}
+    .empty{padding:24px;text-align:center;color:#1e293b;font-size:11px}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/{{ admin_path }}/panel" class="back">←</a>
+    <div>
+      <span class="title">📂 {{ username }}</span>
+      <span class="subtitle">— file browser</span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <a href="/{{ admin_path }}/user/{{ username }}/download?type=all" class="btn btn-gold">⬇ Download All</a>
+      <a href="/{{ admin_path }}/user/{{ username }}/download?type=.py" class="btn btn-gold">⬇ .py only</a>
+    </div>
+  </header>
+
+  <main>
+    {% if file_data %}
+    {% for proj_name, pdata in file_data.items() %}
+    <div class="project-block">
+      <div class="proj-hdr">
+        <div>
+          <span class="proj-name">{{ proj_name }}</span>
+          <span class="proj-meta" style="margin-left:10px">{{ pdata.config.runtime }} · {{ pdata.files|length }} files</span>
+        </div>
+        <div class="proj-actions">
+          <a href="/{{ admin_path }}/project/{{ proj_name }}/download?type=all" class="btn btn-gold" style="font-size:10px;padding:4px 10px">⬇ ZIP</a>
+          <a href="/{{ admin_path }}/project/{{ proj_name }}/download?type=.py" class="btn btn-gold" style="font-size:10px;padding:4px 10px">.py</a>
+          <a href="/{{ admin_path }}/project/{{ proj_name }}/download?type=.js" class="btn btn-gold" style="font-size:10px;padding:4px 10px">.js</a>
+        </div>
+      </div>
+      {% if pdata.files %}
+      {% for f in pdata.files %}
+      <div class="file-row">
+        <span class="file-icon">{{ '📂' if f.type == 'dir' else '📄' }}</span>
+        <span class="file-name">{{ f.path }}</span>
+        {% if f.type == 'file' %}
+        <span class="file-size">{{ '%.1f'|format(f.size/1024) }}KB</span>
+        <a href="/{{ admin_path }}/file/{{ proj_name }}/download?path={{ f.path }}" class="dl-btn">⬇</a>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty">No files in this project</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:60px;color:#1e293b;font-size:12px">
+      <div style="font-size:32px;margin-bottom:12px;opacity:.1">📂</div>
+      No projects found for {{ username }}
+    </div>
+    {% endif %}
+  </main>
+</body>
+</html>
