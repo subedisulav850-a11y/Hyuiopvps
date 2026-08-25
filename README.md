@@ -14,6 +14,20 @@ chmod +x install.sh run.sh
 ./run.sh
 ```
 
+## Run with Docker
+
+Build and run this package on a persistent host or container platform. Do not
+deploy it as a Vercel Function when you need hosted child services; the panel
+needs a long-running process and writable storage.
+
+```sh
+docker build -t sulav-vps .
+docker run -d --name sulav-vps --restart unless-stopped \
+  --env-file .env -p 5000:5000 \
+  -v sulav-vps-data:/data \
+  sulav-vps
+```
+
 For 24/7 operation, copy `systemd-sulav-vps.service.example` to a systemd service, adjust the user/path, enable it, and put HTTPS in front with a reverse proxy. Vercel can serve the dashboard and API routes, but Vercel Functions are serverless/ephemeral: they cannot keep child processes alive, bind arbitrary ports, persist local files, or guarantee a 24/7 hosted user service. On Vercel, project start and the dynamic port gateway return a clear 409 response instead of pretending the service is running.
 
 ## Vercel
