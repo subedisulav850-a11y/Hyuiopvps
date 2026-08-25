@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance | {{ site_name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--accent:{{ theme_color }}}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#050505;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .wrap{width:100%;max-width:440px;padding:0 18px;text-align:center}
+    .icon{font-size:48px;margin-bottom:20px;animation:spin 8s linear infinite;display:inline-block}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .title{font-size:22px;font-weight:700;color:var(--accent);letter-spacing:3px;text-shadow:0 0 16px var(--accent);margin-bottom:8px}
+    .sub{font-size:10px;color:color-mix(in srgb,var(--accent) 35%,transparent);letter-spacing:3px;margin-bottom:28px}
+    .card{background:#090909;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:2px;padding:24px;margin-bottom:20px;box-shadow:0 0 30px color-mix(in srgb,var(--accent) 8%,transparent)}
+    .msg{font-size:13px;color:#64748b;line-height:1.7}
+    .dots{display:flex;justify-content:center;gap:6px;margin-top:22px}
+    .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.3;animation:blink 1.4s infinite}
+    .dot:nth-child(2){animation-delay:.2s}
+    .dot:nth-child(3){animation-delay:.4s}
+    @keyframes blink{0%,100%{opacity:.15}50%{opacity:1;box-shadow:0 0 6px var(--accent)}}
+    .footer{font-size:9px;color:#0f172a;letter-spacing:2px;margin-top:16px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="icon">⚙</div>
+    <div class="title">MAINTENANCE</div>
+    <div class="sub">SYSTEM UPDATE IN PROGRESS</div>
+    <div class="card">
+      <div class="msg">{{ message or "We're performing scheduled maintenance. The platform will be back online shortly." }}</div>
+    </div>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="footer">Sulav VPS · SECURE SYSTEMS</div>
+  </div>
+</body>
+</html>
