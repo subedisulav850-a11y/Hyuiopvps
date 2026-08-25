@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ site_name }} — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--accent:{{ theme_color }};--accent-dim:color-mix(in srgb,var(--accent) 10%,transparent);--accent-border:color-mix(in srgb,var(--accent) 30%,transparent);--accent-glow:color-mix(in srgb,var(--accent) 20%,transparent)}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#060606;color:#c9d1d9;font-family:'JetBrains Mono',monospace;min-height:100vh}
+    header{background:#080808;border-bottom:1px solid var(--accent-border);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+    .logo{display:flex;align-items:center;gap:6px}
+    .logo-bracket{color:var(--accent-border);font-size:16px}
+    .logo-name{color:var(--accent);font-weight:700;font-size:14px;letter-spacing:2px;text-shadow:0 0 10px var(--accent)}
+    .header-mid{display:flex;gap:18px;font-size:11px}
+    .stat-item{color:color-mix(in srgb,var(--accent) 55%,transparent)}
+    .stat-item span{color:var(--accent)}
+    .header-right{display:flex;align-items:center;gap:8px}
+    .user-tag{font-size:11px;color:var(--accent);border:1px solid var(--accent-border);padding:3px 10px;border-radius:2px}
+    .btn{padding:4px 12px;border-radius:2px;font-family:inherit;font-size:11px;cursor:pointer;border:1px solid;transition:all .2s;text-decoration:none;display:inline-block}
+    .btn-outline{border-color:#1e293b;color:#475569;background:transparent}
+    .btn-outline:hover{border-color:#334155;color:#94a3b8;background:#111}
+    .btn-red{border-color:rgba(239,68,68,.3);color:#ef4444;background:transparent}
+    .btn-red:hover{background:rgba(239,68,68,.08)}
+    /* Broadcast banner */
+    .broadcast{display:none;padding:9px 20px;font-size:12px;text-align:center;border-bottom:1px solid;letter-spacing:.5px}
+    .broadcast.info{display:block;background:rgba(56,189,248,.06);border-color:rgba(56,189,248,.25);color:#38bdf8}
+    .broadcast.warning{display:block;background:rgba(251,191,36,.06);border-color:rgba(251,191,36,.25);color:#fbbf24}
+    .broadcast.danger{display:block;background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.25);color:#ef4444}
+    .broadcast.success{display:block;background:rgba(34,211,238,.06);border-color:rgba(34,211,238,.25);color:#22d3ee}
+    .bc-dismiss{float:right;cursor:pointer;opacity:.5;transition:opacity .2s;font-size:13px}
+    .bc-dismiss:hover{opacity:1}
+    main{padding:20px;max-width:760px;margin:0 auto}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+    .stat-card{background:#0a0a0a;border:1px solid #111;border-top:1px solid var(--accent-border);border-radius:2px;padding:16px 14px}
+    .stat-num{font-size:26px;font-weight:700;color:var(--accent);text-shadow:0 0 12px var(--accent)}
+    .stat-num.dim{color:#374151;text-shadow:none}
+    .stat-label{font-size:9px;color:#334155;letter-spacing:2px;margin-top:4px;text-transform:uppercase}
+    .section-hdr{font-size:10px;color:#334155;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+    .section-hdr::after{content:'';flex:1;height:1px;background:#111}
+    .server-card{background:#080808;border:1px solid #111;border-left:2px solid;border-radius:2px;padding:14px 16px;margin-bottom:8px;transition:border-color .2s}
+    .server-card.running{border-left-color:var(--accent)}
+    .server-card.stopped{border-left-color:#1e293b}
+    .server-card:hover{border-color:#1e293b}
+    .s-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .s-name{font-weight:700;font-size:14px;color:#e2e8f0;letter-spacing:.5px}
+    .status-badge{padding:2px 8px;border-radius:2px;font-size:10px;font-weight:700;border:1px solid;display:flex;align-items:center;gap:5px;letter-spacing:1px}
+    .status-badge.running{border-color:var(--accent-border);color:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+    .status-badge.stopped{border-color:#1e293b;color:#374151}
+    .s-dot{width:5px;height:5px;border-radius:50%}
+    .s-dot.running{background:var(--accent);box-shadow:0 0 5px var(--accent)}
+    .s-dot.stopped{background:#1e293b}
+    .s-sub{font-size:11px;color:#334155;margin-bottom:12px}
+    .actions{display:flex;gap:5px;flex-wrap:wrap}
+    .icon-btn{width:32px;height:30px;background:transparent;border-radius:2px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit;border:1px solid #111;text-decoration:none;color:#334155}
+    .icon-btn:hover{background:#0d0d0d;border-color:#1e293b;color:#64748b}
+    .icon-btn.start{border-color:rgba(0,255,65,.2);color:var(--accent)}
+    .icon-btn.start:hover{background:var(--accent-dim)}
+    .icon-btn.stop{border-color:rgba(239,68,68,.2);color:#ef4444}
+    .icon-btn.stop:hover{background:rgba(239,68,68,.08)}
+    .empty{text-align:center;padding:60px 20px;color:#1e293b}
+    .empty-icon{font-size:40px;margin-bottom:12px;opacity:.2}
+    .empty-msg{font-size:12px;color:#1e293b;letter-spacing:1px}
+    .fab{position:fixed;bottom:26px;right:26px;width:48px;height:48px;border-radius:2px;background:var(--accent);color:#000;border:none;font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 0 20px var(--accent-glow);display:flex;align-items:center;justify-content:center;z-index:50;transition:box-shadow .2s;font-family:inherit}
+    .fab:hover{box-shadow:0 0 32px color-mix(in srgb,var(--accent) 40%,transparent)}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100}
+    .modal-bg.show{display:flex}
+    .modal{background:#080808;border:1px solid var(--accent-border);border-radius:2px;padding:26px;width:340px;box-shadow:0 0 40px var(--accent-glow)}
+    .modal-top-bar{height:1px;background:var(--accent-border);margin:-26px -26px 20px}
+    .modal-title{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:2px;margin-bottom:20px}
+    .form-group{margin-bottom:14px}
+    .form-label{font-size:10px;color:#475569;display:block;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+    .form-input{width:100%;padding:9px 12px;background:#0c0c0c;border:1px solid #1e293b;border-radius:2px;color:var(--accent);font-family:inherit;font-size:12px;outline:none;transition:border-color .2s}
+    .form-input:focus{border-color:var(--accent-border)}
+    select.form-input option{background:#080808}
+    .modal-actions{display:flex;gap:8px;margin-top:18px}
+    .modal-btn{flex:1;padding:10px;border-radius:2px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;border:1px solid var(--accent);background:transparent;color:var(--accent);transition:all .2s}
+    .modal-btn:hover{background:var(--accent-dim)}
+    .modal-cancel{border-color:#1e293b;color:#475569}
+    .modal-cancel:hover{background:#0d0d0d;border-color:#334155}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <span class="logo-bracket">[</span>
+      <span class="logo-name">Sulav VPS</span>
+      <span class="logo-bracket">]</span>
+    </div>
+    <div class="header-mid">
+      <span class="stat-item">CPU:<span id="hCpu">--</span>%</span>
+      <span class="stat-item">RAM:<span id="hRam">--</span>%</span>
+      <span class="stat-item">DISK:<span id="hDisk">--</span>%</span>
+    </div>
+    <div class="header-right">
+      <span class="user-tag">@{{ username }}</span>
+      <a href="/logout" class="btn btn-red">Logout</a>
+    </div>
+  </header>
+
+  {% if broadcast.active and broadcast.message %}
+  <div class="broadcast {{ broadcast.btype }}" id="bcBar">
+    <span class="bc-dismiss" onclick="dismissBroadcast()">✕</span>
+    ⚡ {{ broadcast.message }}
+  </div>
+  {% endif %}
+
+  <main>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num">{{ running }}</div>
+        <div class="stat-label">Running</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num dim" style="color:#94a3b8;text-shadow:none">{{ total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="cpuNum" style="font-size:20px">--</div>
+        <div class="stat-label">CPU %</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="ramNum" style="font-size:20px">--</div>
+        <div class="stat-label">RAM %</div>
+      </div>
+    </div>
+
+    <div class="section-hdr">PROJECTS</div>
+
+    {% if servers %}
+    {% for name, cfg in servers.items() %}
+    <div class="server-card {{ cfg.status }}">
+      <div class="s-top">
+        <span class="s-name">{{ name }}</span>
+        <div class="status-badge {{ cfg.status }}">
+          <div class="s-dot {{ cfg.status }}"></div>
+          {{ cfg.status.upper() }}
+        </div>
+      </div>
+      <div class="s-sub">{{ cfg.runtime }} · {{ cfg.main_file or 'main.py' }}{% if cfg.auto_restart %} · <span style="color:var(--accent);opacity:.7">auto-restart</span>{% endif %}</div>
+      <div class="actions">
+        {% if cfg.status == 'running' %}
+        <form action="/server/{{ name }}/stop" method="POST" style="display:inline">
+          <button class="icon-btn stop" title="Stop">■</button>
+        </form>
+        {% else %}
+        <form action="/server/{{ name }}/start" method="POST" style="display:inline">
+          <button class="icon-btn start" title="Start">▶</button>
+        </form>
+        {% endif %}
+        <a href="/server/{{ name }}" class="icon-btn" title="Open" style="color:var(--accent);border-color:var(--accent-border)">⊞</a>
+        <a href="/server/{{ name }}?tab=settings" class="icon-btn" title="Settings" style="color:#a78bfa;border-color:#a78bfa33">⚙</a>
+        <form action="/server/delete/{{ name }}" method="POST" style="display:inline" onsubmit="return confirm('Delete {{ name }}?')">
+          <button class="icon-btn" title="Delete" style="color:#ef4444;border-color:rgba(239,68,68,.2)">✕</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty">
+      <div class="empty-icon">□</div>
+      <div class="empty-msg">NO PROJECTS YET — PRESS + TO CREATE ONE</div>
+    </div>
+    {% endif %}
+  </main>
+
+  <button class="fab" onclick="document.getElementById('createModal').classList.add('show')" title="New Project">+</button>
+
+  <div id="createModal" class="modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal">
+      <div class="modal-top-bar"></div>
+      <div class="modal-title">&gt;_ NEW PROJECT</div>
+      <form action="/server/create" method="POST">
+        <div class="form-group">
+          <label class="form-label">Project Name</label>
+          <input class="form-input" name="name" placeholder="my-bot" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Runtime</label>
+          <select class="form-input" name="runtime">
+            <option value="python">Python</option>
+            <option value="node">Node.js</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="modal-btn">CREATE</button>
+          <button type="button" class="modal-btn modal-cancel" onclick="document.getElementById('createModal').classList.remove('show')">CANCEL</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function fetchStats(){
+      try{
+        const d=await(await fetch('/api/stats')).json();
+        document.getElementById('hCpu').textContent=d.cpu.toFixed(1);
+        document.getElementById('hRam').textContent=d.ram.toFixed(1);
+        document.getElementById('hDisk').textContent=d.disk.toFixed(1);
+        document.getElementById('cpuNum').textContent=d.cpu.toFixed(1);
+        document.getElementById('ramNum').textContent=d.ram.toFixed(1);
+      }catch(e){}
+    }
+    fetchStats();setInterval(fetchStats,5000);
+
+    function dismissBroadcast(){
+      const bar=document.getElementById('bcBar');
+      if(bar){bar.style.display='none';localStorage.setItem('bc_dismissed','{{ broadcast.message|default("")|truncate(20,True,"") }}');}
+    }
+    (function(){
+      const bar=document.getElementById('bcBar');
+      if(!bar)return;
+      const key='bc_dismissed';
+      const msg='{{ broadcast.message|default("")|truncate(20,True,"") }}';
+      if(localStorage.getItem(key)===msg)bar.style.display='none';
+    })();
+  </script>
+</body>
+</html>

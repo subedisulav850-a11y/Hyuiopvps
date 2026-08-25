@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ server_name }} | {{ site_name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--accent:{{ theme_color }};--accent-dim:color-mix(in srgb,var(--accent) 10%,transparent);--accent-border:color-mix(in srgb,var(--accent) 30%,transparent);--accent-glow:color-mix(in srgb,var(--accent) 18%,transparent)}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#060606;color:#c9d1d9;font-family:'JetBrains Mono',monospace;min-height:100vh}
+    header{background:#080808;border-bottom:1px solid var(--accent-border);padding:0 18px;height:52px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+    .back{background:transparent;border:1px solid #111;color:#334155;width:30px;height:30px;border-radius:2px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;transition:all .2s}
+    .back:hover{background:#0d0d0d;color:#64748b;border-color:#1e293b}
+    .header-info{flex:1;min-width:0}
+    .s-title{font-size:14px;font-weight:700;color:#e2e8f0;margin-right:8px;letter-spacing:.5px}
+    .status-badge{padding:2px 8px;border-radius:2px;font-size:10px;font-weight:700;border:1px solid;display:inline-flex;align-items:center;gap:4px;letter-spacing:1px;vertical-align:middle}
+    .status-badge.running{border-color:var(--accent-border);color:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+    .status-badge.stopped{border-color:#1e293b;color:#374151}
+    .s-dot{width:5px;height:5px;border-radius:50%}
+    .s-dot.running{background:var(--accent);box-shadow:0 0 4px var(--accent);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .s-dot.stopped{background:#1e293b}
+    .s-sub{font-size:10px;color:#334155;margin-top:2px}
+    .btn{padding:6px 14px;border-radius:2px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;border:1px solid;background:transparent;transition:all .2s;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px}
+    .btn-start{border-color:var(--accent-border);color:var(--accent)}
+    .btn-start:hover{background:var(--accent-dim)}
+    .btn-stop{border-color:rgba(239,68,68,.3);color:#ef4444}
+    .btn-stop:hover{background:rgba(239,68,68,.08)}
+    .btn-accent{background:var(--accent);border:none;color:#000;box-shadow:0 0 10px var(--accent-glow)}
+    .btn-accent:hover{opacity:.9}
+    .btn-ghost{border-color:#1e293b;color:#475569}
+    .btn-ghost:hover{background:#0d0d0d;border-color:#334155;color:#64748b}
+    /* Broadcast */
+    .broadcast{display:none;padding:8px 18px;font-size:11px;text-align:center;border-bottom:1px solid}
+    .broadcast.info{display:block;background:rgba(56,189,248,.06);border-color:rgba(56,189,248,.2);color:#38bdf8}
+    .broadcast.warning{display:block;background:rgba(251,191,36,.06);border-color:rgba(251,191,36,.2);color:#fbbf24}
+    .broadcast.danger{display:block;background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2);color:#ef4444}
+    .broadcast.success{display:block;background:rgba(34,211,238,.06);border-color:rgba(34,211,238,.2);color:#22d3ee}
+    main{padding:18px;max-width:780px;margin:0 auto}
+    .tabs{display:flex;gap:1px;background:#0a0a0a;border:1px solid #111;border-radius:2px;padding:3px;width:fit-content;margin-bottom:20px}
+    .tab{padding:6px 16px;border-radius:2px;border:none;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;letter-spacing:.5px;background:transparent;color:#334155;transition:all .2s}
+    .tab.active{background:#0d0d0d;color:var(--accent);text-shadow:0 0 8px var(--accent)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    /* Upload zone */
+    .upload-zone{border:1px dashed #1e293b;border-radius:2px;padding:28px;text-align:center;cursor:pointer;background:#080808;transition:all .2s;margin-bottom:14px}
+    .upload-zone:hover,.upload-zone.drag{border-color:var(--accent-border);background:var(--accent-dim)}
+    .upload-icon{font-size:28px;margin-bottom:8px;opacity:.3}
+    .upload-title{font-size:13px;color:#475569}
+    .upload-sub{font-size:10px;color:#1e293b;margin-top:4px}
+    .upload-sub span{color:color-mix(in srgb,var(--accent) 60%,transparent)}
+    .auto-bar{background:var(--accent-dim);border:1px solid var(--accent-border);border-left:2px solid var(--accent);border-radius:2px;padding:9px 14px;font-size:11px;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+    .card{background:#080808;border:1px solid #111;border-radius:2px;overflow:hidden;margin-bottom:12px}
+    .card-hdr{padding:8px 14px;border-bottom:1px solid #0d0d0d;font-size:10px;color:#334155;letter-spacing:1px;display:flex;align-items:center;justify-content:space-between;text-transform:uppercase}
+    .file-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #0a0a0a;font-size:12px;transition:background .1s}
+    .file-row:last-child{border-bottom:none}
+    .file-row:hover{background:#0a0a0a}
+    .file-name{flex:1;color:#475569}
+    .file-name.main-file{color:var(--accent)}
+    .file-size{color:#1e293b;font-size:10px}
+    .main-tag{font-size:9px;color:var(--accent);border:1px solid var(--accent-border);border-radius:2px;padding:1px 5px;margin-left:6px}
+    .main-tag-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:2px;margin-bottom:10px;font-size:11px}
+    /* Packages */
+    .pkg-section{background:#080808;border:1px solid #111;border-radius:2px;padding:16px;margin-bottom:12px}
+    .pkg-label{font-size:10px;color:#334155;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+    .pkg-input-row{display:flex;gap:8px;margin-bottom:12px}
+    input.pkg-input,input.form-input{padding:9px 12px;background:#0c0c0c;border:1px solid #1e293b;border-radius:2px;color:var(--accent);font-family:inherit;font-size:12px;outline:none;transition:border-color .2s}
+    input.pkg-input:focus,input.form-input:focus{border-color:var(--accent-border)}
+    input.pkg-input{flex:1}
+    .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+    .chip{padding:4px 10px;border-radius:2px;font-size:10px;border:1px solid #111;color:#334155;cursor:pointer;transition:all .15s}
+    .chip:hover{border-color:var(--accent-border);color:var(--accent)}
+    .chip.installed{border-color:var(--accent-border);color:var(--accent);background:var(--accent-dim);cursor:default}
+    .pkg-row{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #0a0a0a;font-size:12px}
+    .pkg-row:last-child{border-bottom:none}
+    .pkg-name{flex:1;color:#d1d5db}
+    /* Settings */
+    .settings-block{background:#080808;border:1px solid #111;border-radius:2px;padding:16px;margin-bottom:12px}
+    .settings-block-title{font-size:10px;color:#334155;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+    .form-group{margin-bottom:14px}
+    .form-label{font-size:10px;color:#475569;display:block;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+    .form-input{width:100%}
+    .file-pick{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+    .pick-btn{padding:4px 10px;border-radius:2px;font-size:11px;font-family:inherit;cursor:pointer;border:1px solid #1e293b;color:#334155;background:transparent;transition:all .2s}
+    .pick-btn:hover,.pick-btn.sel{border-color:var(--accent-border);color:var(--accent);background:var(--accent-dim)}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #0d0d0d;margin-bottom:14px}
+    .toggle-info .t-title{font-size:12px;font-weight:500;color:#94a3b8}
+    .toggle-info .t-desc{font-size:10px;color:#334155;margin-top:3px}
+    .toggle{width:40px;height:22px;border-radius:2px;background:#111;border:none;cursor:pointer;position:relative;transition:all .3s}
+    .toggle.on{background:var(--accent)}
+    .toggle-dot{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:2px;background:#1e293b;transition:all .3s}
+    .toggle.on .toggle-dot{left:21px;background:#000}
+    .interval-row{display:flex;gap:8px;align-items:center}
+    .interval-num,.interval-unit{padding:9px 12px;background:#0c0c0c;border:1px solid #1e293b;border-radius:2px;color:var(--accent);font-family:inherit;font-size:12px;outline:none;transition:border-color .2s;cursor:pointer}
+    .interval-num{width:90px}
+    .interval-num:focus,.interval-unit:focus{border-color:var(--accent-border)}
+    .info-box{background:#0a0a0a;border:1px solid #111;border-left:2px solid var(--accent-border);border-radius:2px;padding:12px 14px;font-size:11px;color:#334155;line-height:1.7}
+    /* Logs */
+    .log-box{background:#050505;border:1px solid #111;border-radius:2px;overflow:hidden}
+    .log-hdr{padding:8px 12px;border-bottom:1px solid #0d0d0d;font-size:10px;color:#334155;letter-spacing:1px;display:flex;align-items:center;justify-content:space-between;text-transform:uppercase;background:#080808}
+    pre.log-content{font-family:inherit;font-size:11px;color:var(--accent);padding:14px;min-height:320px;max-height:500px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.7;margin:0;opacity:.9}
+    /* Console */
+    .console-box{background:#050505;border:1px solid #111;border-radius:2px;overflow:hidden}
+    .console-output{font-family:inherit;font-size:11px;color:var(--accent);padding:14px;min-height:280px;max-height:420px;overflow-y:auto;line-height:1.7;white-space:pre-wrap;word-break:break-all}
+    .console-stderr{color:#f87171}
+    .console-input-row{display:flex;align-items:center;gap:0;border-top:1px solid #0d0d0d;background:#080808}
+    .console-prompt{padding:10px 14px;font-size:12px;color:color-mix(in srgb,var(--accent) 50%,transparent);white-space:nowrap}
+    #consoleInput{flex:1;padding:10px 4px;background:transparent;border:none;color:var(--accent);font-family:inherit;font-size:12px;outline:none}
+    .console-run-btn{padding:10px 16px;background:transparent;border:none;border-left:1px solid #111;color:var(--accent);font-family:inherit;font-size:11px;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .console-run-btn:hover{background:var(--accent-dim)}
+    /* Toast */
+    #toast{position:fixed;bottom:18px;right:18px;background:#080808;border:1px solid var(--accent-border);border-left:2px solid var(--accent);border-radius:2px;padding:10px 16px;font-size:12px;color:var(--accent);transform:translateY(70px);opacity:0;transition:all .25s;z-index:200;box-shadow:0 0 16px var(--accent-glow)}
+    #toast.show{transform:translateY(0);opacity:1}
+    #toast.err{border-color:rgba(239,68,68,.4);border-left-color:#ef4444;color:#f87171}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/dashboard" class="back">←</a>
+    <div class="header-info">
+      <div>
+        <span class="s-title">{{ server_name }}</span>
+        <span class="status-badge {{ config.status }}"><span class="s-dot {{ config.status }}"></span>{{ config.status.upper() }}</span>
+      </div>
+      <div class="s-sub">{{ config.runtime }} · {{ config.get('main_file') or 'no main file' }}</div>
+    </div>
+    <div>
+      {% if config.status == 'running' %}
+      <button class="btn btn-stop" onclick="stopServer()">■ Stop</button>
+      {% else %}
+      <button class="btn btn-start" onclick="startServer()">▶ Start</button>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if broadcast.active and broadcast.message %}
+  <div class="broadcast {{ broadcast.btype }}">⚡ {{ broadcast.message }}</div>
+  {% endif %}
+
+  <main>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('files',this)">FILES</button>
+      <button class="tab" onclick="switchTab('packages',this)">PACKAGES</button>
+      <button class="tab" onclick="switchTab('settings',this)">SETTINGS</button>
+      <button class="tab" onclick="switchTab('logs',this)">LOGS</button>
+      <button class="tab" onclick="switchTab('console',this)">CONSOLE</button>
+    </div>
+
+    <!-- FILES -->
+    <div id="tab-files" class="tab-panel active">
+      <div class="upload-zone" id="dropZone" onclick="document.getElementById('fi').click()">
+        <input type="file" id="fi" accept=".zip,.py,.js,.ts,.json,.txt,.md" hidden onchange="handleUpload(this.files[0])">
+        <div class="upload-icon">📁</div>
+        <div class="upload-title" id="uploadTitle">Click or drag to upload files</div>
+        <div class="upload-sub"><span>.zip</span> · <span>.py</span> · <span>.js</span> — <span>requirements.txt auto-installs packages</span></div>
+      </div>
+
+      <div id="autoBar" class="auto-bar" style="display:none">
+        <span id="autoMsg">⚡ Detected packages — installing...</span>
+        <button class="btn btn-ghost" style="font-size:10px;padding:3px 10px" onclick="runAutoInstall()">↻ Scan</button>
+      </div>
+
+      {% if config.get('main_file') %}
+      <div class="main-tag-bar">
+        <span style="color:var(--accent)">✓ Main:</span>
+        <span style="color:#94a3b8">{{ config.get('main_file') }}</span>
+        <span style="color:#1e293b;margin-left:auto;font-size:10px">→ Change in Settings</span>
+      </div>
+      {% endif %}
+
+      {% if files %}
+      <div class="card">
+        <div class="card-hdr">{{ files|length }} files</div>
+        {% for f in files %}
+        <div class="file-row">
+          <span style="font-size:12px">{{ '📂' if f.type == 'dir' else '📄' }}</span>
+          <span class="file-name {% if f.path == config.get('main_file') %}main-file{% endif %}">
+            {{ f.path }}{% if f.path == config.get('main_file') %}<span class="main-tag">main</span>{% endif %}
+          </span>
+          {% if f.type == 'file' %}<span class="file-size">{{ '%.1f'|format(f.size/1024) }}KB</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:40px;color:#1e293b;font-size:12px">No files uploaded yet</div>
+      {% endif %}
+    </div>
+
+    <!-- PACKAGES -->
+    <div id="tab-packages" class="tab-panel">
+      <div class="pkg-section">
+        <div class="pkg-label">Install Package</div>
+        <div class="pkg-input-row">
+          <input type="text" id="pkgName" class="pkg-input" placeholder="Package name e.g. flask" onkeydown="if(event.key==='Enter')installPkg()">
+          <input type="text" id="pkgVer" class="pkg-input" placeholder="Version (opt.)" style="max-width:140px">
+          <button class="btn btn-accent" style="padding:9px 14px;font-size:11px" onclick="installPkg()">+ Install</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <span style="font-size:10px;color:#334155;letter-spacing:1px">POPULAR</span>
+          <input type="text" class="pkg-input" placeholder="Filter..." style="max-width:140px;padding:4px 10px;font-size:10px" oninput="filterChips(this.value)">
+        </div>
+        <div class="chips" id="chips">
+          {% set pkgs_list = ['flask','fastapi','django','requests','aiohttp','discord.py','python-telegram-bot','tweepy','pandas','numpy','matplotlib','scikit-learn','sqlalchemy','psycopg2','pymongo','redis','celery','pydantic','httpx','openai','anthropic','langchain','boto3','pillow','cryptography','uvicorn','gunicorn'] %}
+          {% set installed_names = config.get('packages',[])|map(attribute='name')|list %}
+          {% for p in pkgs_list %}
+          <span class="chip {% if p in installed_names %}installed{% endif %}" data-pkg="{{ p }}" onclick="{% if p not in installed_names %}installPkg('{{ p }}'){% endif %}">{% if p in installed_names %}✓ {% endif %}{{ p }}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">{{ config.get('packages',[])|length }} installed</div>
+        {% if config.get('packages') %}
+        {% for pkg in config.get('packages',[]) %}
+        <div class="pkg-row">
+          <span style="color:#334155">📦</span>
+          <span class="pkg-name">{{ pkg.name }}{% if pkg.version %}<span style="color:#334155"> v{{ pkg.version }}</span>{% endif %}</span>
+          <span style="font-size:10px;color:#1e293b">{{ pkg.installed_at[:10] if pkg.installed_at else '' }}</span>
+          <button style="background:transparent;border:1px solid rgba(239,68,68,.2);border-radius:2px;color:#ef4444;cursor:pointer;padding:3px 9px;font-size:10px;font-family:inherit" onclick="removePkg('{{ pkg.name }}')">Remove</button>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="padding:22px;text-align:center;color:#1e293b;font-size:12px">No packages installed</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="tab-panel">
+      <div class="settings-block">
+        <div class="settings-block-title">Project Settings</div>
+        <div class="form-group">
+          <label class="form-label">Main File</label>
+          <input type="text" id="mainFile" class="form-input" value="{{ config.get('main_file') or '' }}" placeholder="main.py">
+          <div style="font-size:10px;color:#1e293b;margin-top:4px">Entry point: app.py · main.py · bot.py · index.js</div>
+        </div>
+        {% if files %}
+        <div class="form-group">
+          <div class="form-label">Pick from files</div>
+          <div class="file-pick">
+            {% for f in files %}
+            {% if not f.type == 'dir' and (f.name.endswith('.py') or f.name.endswith('.js') or f.name.endswith('.ts')) %}
+            <button class="pick-btn {% if f.path == config.get('main_file') %}sel{% endif %}" onclick="setMain('{{ f.path }}',this)">{{ f.path }}</button>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="form-group">
+          <label class="form-label">Port</label>
+          <input type="number" id="serverPort" class="form-input" value="{{ config.get('port',8080) }}" style="max-width:140px">
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <div class="settings-block-title">Auto Restart</div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="t-title">Enable Auto Restart</div>
+            <div class="t-desc">Server restarts automatically at the specified interval</div>
+          </div>
+          <button class="toggle {% if config.get('auto_restart') %}on{% endif %}" id="arToggle" onclick="toggleAR()">
+            <div class="toggle-dot"></div>
+          </button>
+        </div>
+        <div id="intervalSection" style="{% if not config.get('auto_restart') %}display:none{% endif %}">
+          <div class="form-label">Restart Interval</div>
+          <div class="interval-row">
+            {% set _iv = config.get('auto_restart_interval', 3600) %}
+            {% if _iv < 60 %}{% set _ivn = _iv %}{% elif _iv < 3600 %}{% set _ivn = (_iv // 60) %}{% else %}{% set _ivn = (_iv // 3600) %}{% endif %}
+            <input type="number" id="intervalNum" class="interval-num" value="{{ _ivn }}" min="1" placeholder="5">
+            <select id="intervalUnit" class="interval-unit">
+              <option value="seconds" {% if config.get('auto_restart_interval',3600) < 60 %}selected{% endif %}>Seconds</option>
+              <option value="minutes" {% if 60 <= config.get('auto_restart_interval',3600) < 3600 %}selected{% endif %}>Minutes</option>
+              <option value="hours" {% if config.get('auto_restart_interval',3600) >= 3600 %}selected{% endif %}>Hours</option>
+            </select>
+          </div>
+          <div style="font-size:10px;color:#1e293b;margin-top:8px">Page auto-refreshes after each restart cycle</div>
+        </div>
+      </div>
+
+      <button class="btn btn-accent" style="width:100%;padding:11px;font-size:12px;justify-content:center;letter-spacing:1px" onclick="saveSettings()">SAVE SETTINGS</button>
+
+      <div class="info-box" style="margin-top:12px">
+        ℹ Uploading <span style="color:var(--accent)">requirements.txt</span> or <span style="color:var(--accent)">package.json</span> auto-detects and installs packages.
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="tab-logs" class="tab-panel">
+      <div class="log-box">
+        <div class="log-hdr">
+          <span>Output <span id="logLiveLabel" style="color:color-mix(in srgb,var(--accent) 60%,transparent);font-size:9px"></span></span>
+          <div style="display:flex;gap:5px">
+            <button style="background:transparent;border:1px solid rgba(239,68,68,.2);border-radius:2px;color:#ef4444;cursor:pointer;padding:4px 9px;font-size:10px;font-family:inherit" onclick="clearLogs()">Clear</button>
+            <button id="liveBtn" style="background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:2px;color:var(--accent);cursor:pointer;padding:4px 9px;font-size:10px;font-family:inherit" onclick="toggleLive()">⏸ Live</button>
+            <button style="background:transparent;border:1px solid #111;border-radius:2px;color:#334155;cursor:pointer;padding:4px 9px;font-size:10px;font-family:inherit" onclick="loadLogs()">↻</button>
+          </div>
+        </div>
+        <pre class="log-content" id="logContent">Loading...</pre>
+      </div>
+    </div>
+
+    <!-- CONSOLE -->
+    <div id="tab-console" class="tab-panel">
+      <div class="console-box">
+        <div class="log-hdr">
+          <span>Terminal — <span style="color:color-mix(in srgb,var(--accent) 50%,transparent)">{{ server_name }}/extracted</span></span>
+          <button style="background:transparent;border:1px solid rgba(239,68,68,.2);border-radius:2px;color:#ef4444;cursor:pointer;padding:4px 9px;font-size:10px;font-family:inherit" onclick="clearConsole()">Clear</button>
+        </div>
+        <div class="console-output" id="consoleOutput"><span style="color:#334155">Sulav VPS Terminal ready. Type a command below.
+Working directory: {{ server_name }}/extracted
+Type 'help' for common commands.
+
+</span></div>
+        <div class="console-input-row">
+          <span class="console-prompt">{{ server_name }}@Sulav $&gt;</span>
+          <input type="text" id="consoleInput" placeholder="Enter command..." onkeydown="handleConsoleKey(event)" autocomplete="off" spellcheck="false">
+          <button class="console-run-btn" onclick="runConsoleCmd()">▶ Run</button>
+        </div>
+      </div>
+      <div class="info-box" style="margin-top:10px">
+        ℹ Commands run in <span style="color:var(--accent)">{{ server_name }}/extracted</span> directory. Timeout: 30s.
+        Common: <span style="color:var(--accent)">ls · cat file.py · pip install X · python -c "..." · node -e "..."</span>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    const S='{{ server_name }}';
+    const AR_ON={{ 'true' if config.get('auto_restart') else 'false' }};
+    const AR_INTERVAL={{ config.get('auto_restart_interval', 3600) }};
+    let cmdHistory=[],histIdx=-1;
+
+    function toast(msg,err=false){
+      const t=document.getElementById('toast');
+      t.textContent=msg;t.classList.toggle('err',err);
+      t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
+    }
+    function switchTab(name,el){
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById('tab-'+name).classList.add('active');el.classList.add('active');
+    }
+    function setMain(path,el){
+      document.getElementById('mainFile').value=path;
+      document.querySelectorAll('.pick-btn').forEach(b=>b.classList.remove('sel'));
+      el.classList.add('sel');
+    }
+
+    // Upload
+    const dz=document.getElementById('dropZone');
+    dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};
+    dz.ondragleave=()=>dz.classList.remove('drag');
+    dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');handleUpload(e.dataTransfer.files[0])};
+    async function handleUpload(f){
+      if(!f)return;
+      document.getElementById('uploadTitle').textContent='Uploading & extracting...';
+      const bar=document.getElementById('autoBar'),msg=document.getElementById('autoMsg');
+      const fd=new FormData();fd.append('file',f);
+      const r=await fetch('/server/'+S+'/upload',{method:'POST',body:fd});
+      const d=await r.json();
+      document.getElementById('uploadTitle').textContent='Click or drag to upload files';
+      if(d.success){
+        toast('Uploaded '+d.files.length+' file(s)');
+        if(d.auto_installed&&d.auto_installed.length>0){
+          bar.style.display='flex';
+          msg.textContent='⚡ Auto-installed: '+d.auto_installed.slice(0,3).join(', ')+(d.auto_installed.length>3?' …':'');
+        }
+        if(d.install_errors&&d.install_errors.length>0)toast('Install warning: '+d.install_errors[0],true);
+        setTimeout(()=>location.reload(),1500);
+      }else toast(d.error||'Upload failed',true);
+    }
+    async function runAutoInstall(){
+      toast('Scanning for package files...');
+      const d=await(await fetch('/server/'+S+'/auto-install',{method:'POST'})).json();
+      if(d.success){
+        if(d.installed.length>0)toast('Installed: '+d.installed.join(', '));
+        else toast('No requirement files found');
+        setTimeout(()=>location.reload(),1000);
+      }else toast(d.error||'Error',true);
+    }
+
+    // Packages
+    async function installPkg(name){
+      const n=name||document.getElementById('pkgName').value.trim();
+      const v=document.getElementById('pkgVer')?.value.trim()||'';
+      if(!n){toast('Enter a package name',true);return;}
+      toast('Installing '+n+'...');
+      const d=await(await fetch('/server/'+S+'/packages/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,version:v})})).json();
+      if(d.success){toast('✓ Installed '+d.package);setTimeout(()=>location.reload(),1200);}
+      else toast('Failed: '+d.error,true);
+    }
+    async function removePkg(name){
+      if(!confirm('Remove '+name+'?'))return;
+      await fetch('/server/'+S+'/packages/remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+      toast('Removed '+name);setTimeout(()=>location.reload(),1000);
+    }
+    function filterChips(q){document.querySelectorAll('.chip').forEach(c=>{c.style.display=c.dataset.pkg.includes(q.toLowerCase())?'':'none';});}
+
+    // Settings
+    let arOn={{ 'true' if config.get('auto_restart') else 'false' }};
+    function toggleAR(){
+      arOn=!arOn;
+      document.getElementById('arToggle').classList.toggle('on',arOn);
+      document.getElementById('intervalSection').style.display=arOn?'block':'none';
+    }
+    function getIntervalSeconds(){
+      const n=parseInt(document.getElementById('intervalNum').value)||1;
+      const u=document.getElementById('intervalUnit').value;
+      return u==='minutes'?n*60:u==='hours'?n*3600:n;
+    }
+    async function saveSettings(){
+      const mf=document.getElementById('mainFile').value.trim();
+      const port=parseInt(document.getElementById('serverPort').value)||8080;
+      const iv=getIntervalSeconds();
+      const d=await(await fetch('/server/'+S+'/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({main_file:mf,port,auto_restart:arOn,auto_restart_interval:iv})})).json();
+      if(d.success){toast('Settings saved');if(arOn)startPageRefresh(iv);else stopPageRefresh();setTimeout(()=>location.reload(),1000);}
+      else toast(d.error||'Error',true);
+    }
+
+    // Page auto-refresh
+    let pageTimer=null;
+    function startPageRefresh(s){stopPageRefresh();pageTimer=setTimeout(()=>location.reload(),s*1000+2000);}
+    function stopPageRefresh(){if(pageTimer){clearTimeout(pageTimer);pageTimer=null;}}
+    if(AR_ON)startPageRefresh(AR_INTERVAL);
+
+    // Start/Stop
+    async function startServer(){
+      const d=await(await fetch('/server/'+S+'/start',{method:'POST'})).json();
+      if(d.success){toast('▶ Server started');setTimeout(()=>location.reload(),1200);}
+      else toast(d.error||'Failed to start',true);
+    }
+    async function stopServer(){
+      const d=await(await fetch('/server/'+S+'/stop',{method:'POST'})).json();
+      if(d.success){toast('■ Server stopped');setTimeout(()=>location.reload(),1000);}
+    }
+
+    // Logs
+    let liveInterval=null,liveOn=true;
+    async function loadLogs(){
+      try{
+        const d=await(await fetch('/server/'+S+'/logs')).json();
+        const el=document.getElementById('logContent');
+        const atBottom=el.scrollHeight-el.scrollTop<=el.clientHeight+50;
+        el.textContent=d.logs||'No logs yet.';
+        if(atBottom)el.scrollTop=el.scrollHeight;
+      }catch(e){}
+    }
+    async function clearLogs(){
+      if(!confirm('Clear all logs?'))return;
+      await fetch('/server/'+S+'/logs/clear',{method:'POST'});
+      document.getElementById('logContent').textContent='Logs cleared.';
+      toast('Logs cleared');
+    }
+    function toggleLive(){
+      liveOn=!liveOn;
+      const btn=document.getElementById('liveBtn'),lbl=document.getElementById('logLiveLabel');
+      if(liveOn){btn.textContent='⏸ Live';lbl.textContent='· live';startLive();}
+      else{btn.textContent='▶ Live';lbl.textContent='';clearInterval(liveInterval);}
+    }
+    function startLive(){clearInterval(liveInterval);liveInterval=setInterval(loadLogs,2000);}
+
+    document.querySelector('.tab[onclick*="logs"]').addEventListener('click',()=>{
+      loadLogs();if(liveOn)startLive();
+      document.getElementById('logLiveLabel').textContent=liveOn?'· live':'';
+    });
+    document.querySelectorAll('.tab:not([onclick*="logs"])').forEach(t=>{
+      t.addEventListener('click',()=>clearInterval(liveInterval));
+    });
+
+    // Console
+    function appendConsole(text,cls=''){
+      const out=document.getElementById('consoleOutput');
+      if(cls){
+        const s=document.createElement('span');s.className=cls;s.textContent=text;out.appendChild(s);
+      }else{
+        out.appendChild(document.createTextNode(text));
+      }
+      out.scrollTop=out.scrollHeight;
+    }
+    function clearConsole(){document.getElementById('consoleOutput').innerHTML='<span style="color:#334155">Console cleared.\n\n</span>';}
+    async function runConsoleCmd(){
+      const inp=document.getElementById('consoleInput');
+      const cmd=inp.value.trim();
+      if(!cmd)return;
+      cmdHistory.unshift(cmd);histIdx=-1;inp.value='';
+      appendConsole('$ '+cmd+'\n');
+      try{
+        const r=await fetch('/server/'+S+'/console',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})});
+        const d=await r.json();
+        if(d.output)appendConsole(d.output);
+        if(d.error)appendConsole(d.error,'console-stderr');
+        if(!d.output&&!d.error)appendConsole('(no output)\n');
+        appendConsole('\n');
+      }catch(e){appendConsole('Error: '+e.message+'\n','console-stderr');}
+    }
+    function handleConsoleKey(e){
+      if(e.key==='Enter'){runConsoleCmd();return;}
+      const inp=document.getElementById('consoleInput');
+      if(e.key==='ArrowUp'){e.preventDefault();if(histIdx<cmdHistory.length-1){histIdx++;inp.value=cmdHistory[histIdx];}}
+      if(e.key==='ArrowDown'){e.preventDefault();if(histIdx>0){histIdx--;inp.value=cmdHistory[histIdx];}else{histIdx=-1;inp.value='';}}
+    }
+
+    // URL tab param
+    const urlTab=new URLSearchParams(location.search).get('tab');
+    if(urlTab){const btn=document.querySelector(`.tab[onclick*="${urlTab}"]`);if(btn)btn.click();}
+  </script>
+</body>
+</html>

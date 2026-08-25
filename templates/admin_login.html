@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Access | {{ site_name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#05050a;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .wrap{width:100%;max-width:360px;padding:0 18px}
+    .card{background:#090909;border:1px solid #f59e0b44;border-radius:2px;padding:38px 32px;box-shadow:0 0 40px rgba(245,158,11,.06)}
+    .card-top-bar{height:1px;background:linear-gradient(90deg,transparent,#f59e0b88,transparent);margin:-38px -32px 28px}
+    .icon{font-size:32px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 8px #f59e0b44)}
+    .title{text-align:center;font-size:15px;font-weight:700;color:#f59e0b;letter-spacing:3px;margin-bottom:4px;text-shadow:0 0 10px #f59e0b44}
+    .sub{text-align:center;font-size:10px;color:#44300044;letter-spacing:2px;margin-bottom:26px;color:#78350f}
+    .error{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.3);border-left:2px solid #ef4444;border-radius:2px;padding:9px 12px;color:#f87171;font-size:11px;margin-bottom:14px}
+    .field{margin-bottom:16px}
+    .field-label{font-size:10px;color:#78350f;letter-spacing:2px;display:block;margin-bottom:6px;text-transform:uppercase}
+    input[type=password]{width:100%;padding:10px 12px;background:#0d0d0a;border:1px solid #1c1200;border-radius:2px;color:#fbbf24;font-family:inherit;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
+    input[type=password]:focus{border-color:#f59e0b55;box-shadow:0 0 0 2px rgba(245,158,11,.08)}
+    input::placeholder{color:#1c1200}
+    .btn{width:100%;padding:11px;background:transparent;border:1px solid #f59e0b66;border-radius:2px;color:#f59e0b;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:2px;transition:all .2s;box-shadow:0 0 10px rgba(245,158,11,.08)}
+    .btn:hover{background:rgba(245,158,11,.08);box-shadow:0 0 16px rgba(245,158,11,.15)}
+    .back{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:16px;color:#44300066;font-size:11px;text-decoration:none;transition:color .2s;padding:7px}
+    .back:hover{color:#78350f}
+    .warning{margin-top:16px;background:rgba(245,158,11,.04);border:1px solid #1c1200;border-radius:2px;padding:10px 12px;font-size:10px;color:#44300066;line-height:1.7;display:flex;gap:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-top-bar"></div>
+      <div class="icon">🛡</div>
+      <div class="title">ADMIN ACCESS</div>
+      <div class="sub">{{ site_name }} Control Panel — Restricted</div>
+      {% if error %}<div class="error">▲ {{ error }}</div>{% endif %}
+      <form method="POST">
+        <div class="field">
+          <label class="field-label">Admin Password</label>
+          <input type="password" name="password" placeholder="enter admin password" required autofocus>
+        </div>
+        <button type="submit" class="btn">&gt;_ ACCESS PANEL</button>
+      </form>
+      <a href="/login" class="back">← User Login</a>
+      <div class="warning"><span>⚠</span><div>Restricted to authorized administrators only. All access attempts are logged.</div></div>
+    </div>
+  </div>
+</body>
+</html>

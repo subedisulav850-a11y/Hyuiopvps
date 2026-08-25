@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ site_name }} — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  {% if cf_site_key %}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {% endif %}
+  <style>
+    :root{--accent:{{ theme_color }}}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#050505;font-family:'JetBrains Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    canvas{position:fixed;inset:0;z-index:0}
+    .wrap{position:relative;z-index:10;width:100%;max-width:400px;padding:0 18px}
+    .card{background:#090909;border:1px solid var(--accent);border-radius:4px;padding:40px 36px;box-shadow:0 0 40px color-mix(in srgb,var(--accent) 15%,transparent),inset 0 0 60px rgba(0,0,0,.4)}
+    .card-top-bar{height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:-40px -36px 30px;border-radius:2px 2px 0 0}
+    .logo-line{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+    .logo-bracket{color:var(--accent);font-size:20px;opacity:.6}
+    .logo-text{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:3px;text-shadow:0 0 14px var(--accent)}
+    .sub{font-size:10px;color:color-mix(in srgb,var(--accent) 50%,transparent);letter-spacing:3px;margin-bottom:28px;margin-left:2px}
+    .prompt-label{font-size:11px;color:color-mix(in srgb,var(--accent) 60%,transparent);margin-bottom:18px;display:flex;align-items:center;gap:6px}
+    .prompt-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);display:inline-block}
+    .error-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.4);border-left:3px solid #ef4444;border-radius:2px;padding:10px 14px;font-size:12px;color:#f87171;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .field{margin-bottom:14px}
+    .field-label{font-size:10px;color:color-mix(in srgb,var(--accent) 55%,transparent);letter-spacing:2px;display:block;margin-bottom:6px}
+    input[type=text],input[type=password]{width:100%;padding:11px 14px;background:#0c0c0c;border:1px solid rgba(100,116,139,.25);border-radius:2px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
+    input[type=text]:focus,input[type=password]:focus{border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 10%,transparent)}
+    input::placeholder{color:#1e293b}
+    .pw-wrap{position:relative}
+    .pw-wrap input{padding-right:44px}
+    .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:color-mix(in srgb,var(--accent) 40%,transparent);font-size:14px;padding:0;line-height:1;transition:color .2s}
+    .eye-btn:hover{color:var(--accent)}
+    .cf-wrap{margin-bottom:14px;display:flex;justify-content:center}
+    .auth-btn{width:100%;padding:12px;background:transparent;border:1px solid var(--accent);border-radius:2px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:all .2s;box-shadow:0 0 12px color-mix(in srgb,var(--accent) 15%,transparent);margin-top:4px}
+    .auth-btn:hover{background:color-mix(in srgb,var(--accent) 10%,transparent);box-shadow:0 0 24px color-mix(in srgb,var(--accent) 30%,transparent)}
+    .footer{text-align:center;margin-top:28px;font-size:9px;color:#1e293b;letter-spacing:2px;line-height:2}
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-top-bar"></div>
+      <div class="logo-line">
+        <span class="logo-bracket">[</span>
+        <span class="logo-text">Sulav VPS</span>
+        <span class="logo-bracket">]</span>
+      </div>
+      <div class="sub">SECURE CLOUD CONTROL PANEL v3.0</div>
+      <div class="prompt-label">AUTHENTICATION REQUIRED</div>
+      {% if error %}
+      <div class="error-box">▲ {{ error }}</div>
+      {% endif %}
+      <form method="POST">
+        <div class="field">
+          <label class="field-label">USERNAME</label>
+          <input type="text" name="username" placeholder="enter username" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label class="field-label">PASSWORD</label>
+          <div class="pw-wrap">
+            <input type="password" name="password" id="pw" placeholder="enter password" autocomplete="current-password">
+            <button type="button" class="eye-btn" onclick="togglePw()">👁</button>
+          </div>
+        </div>
+        {% if cf_site_key %}
+        <div class="cf-wrap">
+          <div class="cf-turnstile" data-sitekey="{{ cf_site_key }}" data-theme="dark"></div>
+        </div>
+        {% endif %}
+        <button type="submit" class="auth-btn">&gt;_ AUTHENTICATE</button>
+      </form>
+      <div class="footer">⚠ UNAUTHORIZED ACCESS PROHIBITED<br>Sulav SECURE SYSTEMS · ALL ACTIONS LOGGED</div>
+    </div>
+  </div>
+  <script>
+    const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+    const color='{{ theme_color }}';
+    function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
+    resize();addEventListener('resize',resize);
+    const chars='アイウエオカキクケコサシスセソ01SulavVPS';
+    let cols=Math.floor(canvas.width/16),drops=Array(cols).fill(1);
+    setInterval(()=>{
+      ctx.fillStyle='rgba(5,5,5,0.06)';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle=color+'1a';ctx.font='12px JetBrains Mono';
+      for(let i=0;i<drops.length;i++){
+        ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*16,drops[i]*16);
+        if(drops[i]*16>canvas.height&&Math.random()>.975)drops[i]=0;
+        drops[i]++;
+      }
+    },55);
+    function togglePw(){const p=document.getElementById('pw');p.type=p.type==='password'?'text':'password';}
+  </script>
+</body>
+</html>
