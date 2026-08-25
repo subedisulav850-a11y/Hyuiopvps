@@ -1,0 +1,19 @@
+{
+  "servers": {},
+  "users": {
+    "Sulav": {
+      "joined": "2026-04-14T11:58:17.376241",
+      "password_hash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
+    }
+  },
+  "settings": {
+    "maintenance": false,
+    "maintenance_msg": "System under maintenance.",
+    "accent_color": "#ef4444",
+    "broadcast": {
+      "active": false,
+      "message": "Hello welcome to our VPS \u2764\ufe0f",
+      "btype": "info"
+    }
+  }
+}
